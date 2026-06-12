@@ -9,8 +9,8 @@ INI           = ${NAME}.ini
 
 COMPILER            = g++
 LINKER              = g++
-COMPILER_FLAGS      = -Wall -c -O2 -std=c++11 -fpic -o
-LINKER_FLAGS        = -shared
+COMPILER_FLAGS      = -Wall -c -O2 -std=c++11 -fpic -I/usr/local/include -I/usr/local/include/azureiot -I/usr/local/include/c_logging/v2 -I/usr/local/include/macro_utils -I/usr/local/include/umock_c -o
+LINKER_FLAGS        = -shared -L/usr/local/lib
 LINKER_DEPENDENCIES = -lphpcpp -luamqp -laziotsharedutil -luuid
 
 RM =   rm -f
