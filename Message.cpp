@@ -121,12 +121,9 @@ void Message::setBody(std::string body)
 {
     this->body = body;
 
-    unsigned char bodyCharArray[body.size()];
-    for (unsigned int i = 0; i < body.size(); i++) {
-        bodyCharArray[i] = body.at(i);
-    }
-    binary_data.bytes = bodyCharArray;
-    binary_data.length = sizeof(bodyCharArray);
+    bodyBytes.assign(body.begin(), body.end());
+    binary_data.bytes = bodyBytes.empty() ? NULL : bodyBytes.data();
+    binary_data.length = bodyBytes.size();
     message_add_body_amqp_data(message, binary_data);
 }
 

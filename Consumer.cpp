@@ -6,27 +6,24 @@
 #include "Session.h"
 #include "Message.h"
 
-static Php::Value *callbackFn;
-static bool consumerStopRunning = false;
-static std::string consumerExceptionMessage = "";
-
 static void on_link_detach_received_consumer(void* context, ERROR_HANDLE error)
 {
-    (void)error;
-    const char* condition = NULL;
-    const char* description = NULL;
-    error_get_condition(error, &condition);
-    error_get_description(error, &description);
-    consumerExceptionMessage += "(" + std::string(condition) + ") " + std::string(description);
-    consumerStopRunning = true;
+    auto *consumer = static_cast<Consumer*>(context);
+    if (consumer == nullptr) {
+        return;
+    }
+
+    consumer->handleLinkDetach(error);
 }
 
 static AMQP_VALUE on_message_received(const void* context, MESSAGE_HANDLE message)
 {
-    (void)context;
-    Message *msg = new Message();
-    msg->setMessageHandler(message);
-    (*callbackFn)(Php::Object("Azure\\uAMQP\\Message", msg));
+    auto *consumer = const_cast<Consumer*>(static_cast<const Consumer*>(context));
+    if (consumer == nullptr) {
+        throw Php::Exception("Consumer context is not set");
+    }
+
+    consumer->handleMessage(message);
 
     return messaging_delivery_accepted();
 }
@@ -35,12 +32,19 @@ Consumer::Consumer(Session *session, std::string resourceName)
 {
     this->session = session;
     this->resourceName = resourceName;
+    stopRunning = false;
+    closeRequested = false;
+    exceptionMessage.clear();
+    link = NULL;
+    message_receiver = NULL;
+    source = NULL;
+    target = NULL;
 
     source = messaging_create_source(("amqps://" + session->getConnection()->getHost() + "/" + resourceName).c_str());
     target = messaging_create_target("ingress-rx");
     link = link_create(session->getSessionHandler(), "receiver-link", role_receiver, source, target);
     link_set_rcv_settle_mode(link, receiver_settle_mode_first);
-    link_subscribe_on_link_detach_received(link, on_link_detach_received_consumer, session);
+    link_subscribe_on_link_detach_received(link, on_link_detach_received_consumer, this);
 
     amqpvalue_destroy(source);
     amqpvalue_destroy(target);
@@ -59,18 +63,47 @@ Consumer::Consumer(Session *session, std::string resourceName)
 
 void Consumer::setCallback(Php::Value &callback, Php::Value &loopFn)
 {
-    callbackFn = &callback;
+    callbackFn = callback;
 
-    if (messagereceiver_open(message_receiver, on_message_received, message_receiver) != 0) {
+    if (messagereceiver_open(message_receiver, on_message_received, this) != 0) {
         throw Php::Exception("Could not open the message receiver");
     }
 
     loopFn();
 }
 
+void Consumer::handleMessage(MESSAGE_HANDLE message)
+{
+    if (callbackFn.isNull()) {
+        throw Php::Exception("Consumer callback is not set");
+    }
+
+    Message *msg = new Message();
+    msg->setMessageHandler(message);
+    callbackFn(Php::Object("Azure\\uAMQP\\Message", msg));
+}
+
+void Consumer::handleLinkDetach(ERROR_HANDLE error)
+{
+    const char* condition = NULL;
+    const char* description = NULL;
+
+    if (error != NULL) {
+        error_get_condition(error, &condition);
+        error_get_description(error, &description);
+    }
+
+    stopRunning = true;
+
+    if (condition != NULL || description != NULL) {
+        exceptionMessage += "(" + std::string(condition != NULL ? condition : "unknown") + ") " +
+            std::string(description != NULL ? description : "no description");
+    }
+}
+
 void Consumer::consume()
 {
-    if (consumerStopRunning) {
+    if (stopRunning) {
         close();
     } else {
         session->getConnection()->doWork();
@@ -79,13 +112,26 @@ void Consumer::consume()
 
 void Consumer::close()
 {
+    if (closeRequested) {
+        return;
+    }
+
     closeRequested = true;
-    messagereceiver_destroy(message_receiver);
-    link_destroy(link);
-    session->close();
-    session->getConnection()->close();
-    if (!consumerExceptionMessage.empty()) {
-        throw Php::Exception(consumerExceptionMessage);
+
+    if (message_receiver != NULL) {
+        messagereceiver_destroy(message_receiver);
+        message_receiver = NULL;
+    }
+
+    if (link != NULL) {
+        link_destroy(link);
+        link = NULL;
+    }
+
+    stopRunning = true;
+
+    if (!exceptionMessage.empty()) {
+        throw Php::Exception(exceptionMessage);
     }
 }
 

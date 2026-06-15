@@ -1,12 +1,14 @@
 #ifndef UAMQP_PHP_MESSAGE_H
 #define UAMQP_PHP_MESSAGE_H
 #include <phpcpp.h>
+#include <vector>
 #include "azure_uamqp_c/uamqp.h"
 
 class Message : public Php::Base
 {
 private:
     std::string body;
+    std::vector<unsigned char> bodyBytes;
     MESSAGE_HANDLE message;
     AMQP_VALUE application_properties;
     AMQP_VALUE annotations_map;

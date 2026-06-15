@@ -21,24 +21,25 @@ private:
     bool debug;
     bool isConnected = false;
     bool closeRequested = false;
+    bool platformInitialized = false;
 
-    Session *session;
-    Consumer *consumer;
+    Session *session = NULL;
+    Consumer *consumer = NULL;
 
-    CONNECTION_HANDLE connection;
-    XIO_HANDLE sasl_io;
-    XIO_HANDLE socket_io;
-    SASL_PLAIN_CONFIG sasl_plain_config;
-    TLSIO_CONFIG tls_io_config;
-    SOCKETIO_CONFIG socketio_config;
-    const IO_INTERFACE_DESCRIPTION* tlsio_interface;
-    SASLCLIENTIO_CONFIG sasl_io_config;
-    SASL_MECHANISM_HANDLE sasl_mechanism_handle;
-    XIO_HANDLE tls_io;
+    CONNECTION_HANDLE connection = NULL;
+    XIO_HANDLE sasl_io = NULL;
+    XIO_HANDLE socket_io = NULL;
+    SASL_PLAIN_CONFIG sasl_plain_config{};
+    TLSIO_CONFIG tls_io_config{};
+    SOCKETIO_CONFIG socketio_config{};
+    const IO_INTERFACE_DESCRIPTION* tlsio_interface = NULL;
+    SASLCLIENTIO_CONFIG sasl_io_config{};
+    SASL_MECHANISM_HANDLE sasl_mechanism_handle = NULL;
+    XIO_HANDLE tls_io = NULL;
 
 public:
-    Connection() = default;
-    virtual ~Connection() = default;
+    Connection();
+    virtual ~Connection();
 
     void __construct(Php::Parameters &params);
     void publish(Php::Parameters &params);

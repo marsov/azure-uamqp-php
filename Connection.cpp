@@ -1,4 +1,8 @@
 #include <phpcpp.h>
+#include <exception>
+#include <cstdio>
+#include "c_logging/logger.h"
+#include "c_logging/log_sink_console.h"
 #include "azure_c_shared_utility/platform.h"
 #include "azure_c_shared_utility/tlsio.h"
 #include "azure_c_shared_utility/socketio.h"
@@ -9,8 +13,45 @@
 #include "Consumer.h"
 #include "Message.h"
 
+namespace
+{
+void ensureLoggerConfigured()
+{
+    static bool loggerConfigured = false;
+
+    if (loggerConfigured) {
+        return;
+    }
+
+    if (logger_init() != 0) {
+        throw Php::Exception("Could not initialize logger");
+    }
+
+    static const LOG_SINK_IF *sinks[] = { &log_sink_console };
+    LOGGER_CONFIG config = { 1, sinks };
+    logger_set_config(config);
+
+    loggerConfigured = true;
+}
+}
+
 void Connection::__construct(Php::Parameters &params)
 {
+    port = 0;
+    useTls = false;
+    debug = false;
+    isConnected = false;
+    closeRequested = false;
+    platformInitialized = false;
+    session = NULL;
+    consumer = NULL;
+    connection = NULL;
+    sasl_io = NULL;
+    socket_io = NULL;
+    tlsio_interface = NULL;
+    sasl_mechanism_handle = NULL;
+    tls_io = NULL;
+
     host    = params[0].stringValue();
     port    = params[1].numericValue();
     useTls  = params[2].boolValue();
@@ -19,15 +60,50 @@ void Connection::__construct(Php::Parameters &params)
     debug   = params.size() == 6 ? params[5].boolValue() : false;
 }
 
+Connection::Connection()
+{
+    port = 0;
+    useTls = false;
+    debug = false;
+    isConnected = false;
+    closeRequested = false;
+    platformInitialized = false;
+    session = NULL;
+    consumer = NULL;
+    connection = NULL;
+    sasl_io = NULL;
+    socket_io = NULL;
+    tlsio_interface = NULL;
+    sasl_mechanism_handle = NULL;
+    tls_io = NULL;
+}
+
+Connection::~Connection()
+{
+    try {
+        close();
+    } catch (...) {
+        // Destructors must never throw during PHP shutdown.
+    }
+}
+
 void Connection::connect()
 {
     if (isConnected) {
         return;
     }
 
+    closeRequested = false;
+
     bool useAuth = !keyName.empty() && !key.empty();
 
-    if (platform_init() != 0) {
+    if (debug) {
+        ensureLoggerConfigured();
+    }
+
+    if (platform_init() == 0) {
+        platformInitialized = true;
+    } else {
         //throw Php::Exception("Could not run platform_init");
     }
 
@@ -57,6 +133,9 @@ void Connection::connect()
 
     /* create the connection */
     connection = connection_create(useAuth ? sasl_io : socket_io, host.c_str(), "some", NULL, NULL);
+    if (connection == NULL) {
+        throw Php::Exception("Could not create connection");
+    }
     if (isDebugOn()) {
         connection_set_trace(connection, true);
     }
@@ -92,7 +171,7 @@ void Connection::setCallback(Php::Parameters &params)
 
 void Connection::consume()
 {
-    if (consumer != NULL) {
+    if (consumer != NULL && !consumer->wasCloseRequested()) {
         consumer->consume();
     }
 }
@@ -109,7 +188,9 @@ CONNECTION_HANDLE Connection::getConnectionHandler()
 
 void Connection::doWork()
 {
-    connection_dowork(connection);
+    if (connection != NULL) {
+        connection_dowork(connection);
+    }
 }
 
 bool Connection::isDebugOn()
@@ -119,16 +200,55 @@ bool Connection::isDebugOn()
 
 void Connection::close()
 {
-    if (consumer != NULL && !consumer->wasCloseRequested()) {
-        consumer->close();
+    std::string closeError;
+
+    if (closeRequested) {
+        return;
     }
 
-    if (!closeRequested) {
-        closeRequested = true;
+    closeRequested = true;
+
+    if (consumer != NULL && !consumer->wasCloseRequested()) {
+        try {
+            consumer->close();
+        } catch (const std::exception &e) {
+            closeError = e.what();
+        } catch (...) {
+            closeError = "Unknown consumer shutdown error";
+        }
+    }
+
+    if (session != NULL) {
+        session->close();
+    }
+
+    if (connection != NULL) {
         connection_destroy(connection);
+        connection = NULL;
+    }
+    if (sasl_io != NULL) {
         xio_destroy(sasl_io);
+        sasl_io = NULL;
+    }
+    if (tls_io != NULL) {
         xio_destroy(tls_io);
+        tls_io = NULL;
+    }
+    if (sasl_mechanism_handle != NULL) {
         saslmechanism_destroy(sasl_mechanism_handle);
+        sasl_mechanism_handle = NULL;
+    }
+    if (platformInitialized) {
         platform_deinit();
+        platformInitialized = false;
+    }
+
+    isConnected = false;
+    session = NULL;
+    consumer = NULL;
+
+
+    if (!closeError.empty()) {
+        throw Php::Exception(closeError);
     }
 }
