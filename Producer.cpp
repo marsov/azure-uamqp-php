@@ -61,6 +61,8 @@ void Producer::publish(Message *message)
 {
     MESSAGE_HANDLE msg = message->getMessageHandler();
     sent_messages = 0;
+    producerStopRunning = false;
+    producerExceptionMessage.clear();
 
     if (messagesender_open(message_sender) != 0) {
         throw Php::Exception("Error creating messaging sender");
@@ -80,8 +82,14 @@ void Producer::publish(Message *message)
     message_destroy(msg);
     messagesender_destroy(message_sender);
     link_destroy(link);
-    session->close();
-    session->getConnection()->close();
+
+    Connection *connection = (session != NULL) ? session->getConnection() : NULL;
+    if (connection != NULL) {
+        connection->close();
+    } else if (session != NULL) {
+        session->close();
+    }
+
     if (!producerExceptionMessage.empty()) {
         throw Php::Exception(producerExceptionMessage);
     }

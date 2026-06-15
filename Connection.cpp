@@ -153,8 +153,8 @@ void Connection::publish(Php::Parameters &params)
     std::string resourceName = params[0].stringValue();
     Message *message = (Message*) params[1].implementation();
 
-    Producer *producer = new Producer(session, resourceName);
-    producer->publish(message);
+    Producer producer(session, resourceName);
+    producer.publish(message);
 }
 
 void Connection::setCallback(Php::Parameters &params)
