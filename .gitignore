@@ -1,3 +1,4 @@
 *.o
 *.so
 examples/parameters.php
+.idea
