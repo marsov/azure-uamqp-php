@@ -1,59 +1,43 @@
 # Azure uAMQP PHP
 
-PHP binding for Azure uAMQP C (AMQP 1.0) - currently being used with Azure Service Bus (Topics and Subscriptions) but should work for everything else that works with AMQP 1.0.
+PHP binding for Azure uAMQP C (AMQP 1.0) used for Azure Service Bus and other AMQP 1.0-compatible systems.
 
-This is a wrapper for the C library provided by Azure (Azure uAMQP C), builded as an extension in PHP, providing PHP classes so that PHP code can work with AMQP 1.0.
+This directory now uses an automated setup flow driven by `setup.sh`.
 
-Currently being used with PHP 7.2.
+## Quick start
 
-# Pre-requisites
+Use the installation guide for the full setup details:
 
-In order to compile this extension, you need three dependencies to be installed (Azure C Shared Utility, Azure uAMQP C and PHP-CPP). You can install them this way if you're using Ubuntu (tested against Ubuntu docker image ubuntu:18.04).
+- [`INSTALL.md`](./INSTALL.md)
 
-```
-$ apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        # php-cpp
-        wget \
-        make \
-        g++ \
-        php7.2-dev \
-        # azure-uamqp-c
-        git \
-        cmake \
-        build-essential \
-        curl \
-        libcurl4-openssl-dev \
-        libssl-dev uuid-dev
+Run the installer from this directory:
 
-# Install Azure C Shared Utility
-$ git clone --recursive https://github.com/Azure/azure-c-shared-utility.git \
-        && cd azure-c-shared-utility \
-        && mkdir cmake \
-        && cd cmake \
-        && cmake -Duse_installed_dependencies=ON ../ \
-        && cmake --build . --target install
-
-# Install Azure UAMQP C
-$ git clone --recursive https://github.com/Azure/azure-uamqp-c.git \
-        && cd azure-uamqp-c \
-        && mkdir cmake \
-        && cd cmake \
-        && cmake -Duse_installed=ON ../ \
-        && cmake --build . --target install
-
-# Install PHP-CPP
-$ cd /tmp \
-        && wget https://github.com/CopernicaMarketingSoftware/PHP-CPP/archive/v2.1.0.tar.gz \
-        && tar xzf v2.1.0.tar.gz \
-        && cd PHP-CPP-2.1.0 \
-        && make \
-        && make install
+```bash
+sudo bash setup.sh
 ```
 
-# Compiling and installing the extension
+## What `setup.sh` does
 
-```
-$ make
-$ make install
-```
+The script automates the complete build and install process:
+
+1. Detects the extension source directory and build location.
+2. Reads optional environment variables for PHP and PHP-CPP versions.
+3. Creates a temporary `libs-build` directory.
+4. Installs required Debian packages.
+5. Builds and installs:
+   - Azure C Shared Utility
+   - Azure uAMQP C
+   - PHP-CPP
+6. Builds and installs the PHP extension.
+7. Enables and verifies the extension in PHP.
+8. Cleans up temporary build artifacts.
+
+## Configuration
+
+The supported environment variables and their defaults are documented in [`INSTALL.md`](./INSTALL.md).
+
+## Notes
+
+- Run the script with `sudo` or as `root` because it installs packages and writes to system directories.
+- The script is intended for Debian-based environments.
+- The old manual build instructions have been replaced by the automated setup script.
