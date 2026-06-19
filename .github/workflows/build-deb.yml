@@ -17,9 +17,14 @@ jobs:
       PHUAMQP_PHP_MAJOR_VERSION: ${{ matrix.php }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install build dependencies
+      - name: Add PHP package repository
         run: |
           sudo apt-get update
+          sudo apt-get install -y software-properties-common ca-certificates lsb-release apt-transport-https
+          sudo add-apt-repository ppa:ondrej/php -y
+          sudo apt-get update
+      - name: Install build dependencies
+        run: |
           sudo apt-get install -y libcurl4-openssl-dev pkg-config
       - name: Build extension
         run: |
