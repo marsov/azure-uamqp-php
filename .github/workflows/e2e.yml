@@ -30,7 +30,10 @@ jobs:
         run: docker compose config
 
       - name: Run end-to-end flow
-        run: docker compose up --build --abort-on-container-exit --exit-code-from phuamqp phuamqp
+        run: |
+          docker compose build phuamqp
+          docker compose up -d phuamqp-servicebus-emulator phuamqp-mssql
+          docker compose run --rm --no-deps phuamqp /bin/bash /workspace/scripts/run-e2e.sh
 
       - name: Show compose logs on failure
         if: failure()
@@ -39,4 +42,3 @@ jobs:
       - name: Tear down compose stack
         if: always()
         run: docker compose down -v --remove-orphans
-

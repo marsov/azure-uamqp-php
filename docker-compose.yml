@@ -43,9 +43,10 @@ services:
     depends_on:
       phuamqp-servicebus-emulator:
         condition: service_started
+    stdin_open: true
+    tty: true
     volumes:
       - ".:/workspace"
-    command: ["/bin/bash", "/workspace/scripts/run-e2e.sh"]
     environment:
       - AZSB_AMQP_HOST=phuamqp-servicebus-emulator
       - AZSB_AMQP_PORT=5672
