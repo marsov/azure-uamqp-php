@@ -72,7 +72,7 @@ void Consumer::setCallback(Php::Value &callback, Php::Value &loopFn)
     loopFn();
 }
 
-void Consumer::handleMessage(MESSAGE_HANDLE message)
+bool Consumer::handleMessage(MESSAGE_HANDLE message)
 {
     if (callbackFn.isNull()) {
         throw Php::Exception("Consumer callback is not set");
@@ -80,7 +80,15 @@ void Consumer::handleMessage(MESSAGE_HANDLE message)
 
     Message *msg = new Message();
     msg->setMessageHandler(message);
-    callbackFn(Php::Object("Azure\\uAMQP\\Message", msg));
+
+    Php::Value callbackResult = callbackFn(Php::Object("Azure\\uAMQP\\Message", msg));
+    if (callbackResult.isBool() && !callbackResult.boolValue()) {
+        // The callback asked to stop after this message; keep the current delivery accepted.
+        requestStop();
+        return false;
+    }
+
+    return true;
 }
 
 void Consumer::handleLinkDetach(ERROR_HANDLE error)
@@ -103,8 +111,12 @@ void Consumer::handleLinkDetach(ERROR_HANDLE error)
 
 void Consumer::consume()
 {
+    if (closeRequested) {
+        return;
+    }
+
     if (stopRunning) {
-        close();
+        requestStop();
     } else {
         session->getConnection()->doWork();
     }
@@ -112,11 +124,26 @@ void Consumer::consume()
 
 void Consumer::close()
 {
+    requestStop();
+
+    if (!exceptionMessage.empty()) {
+        throw Php::Exception(exceptionMessage);
+    }
+}
+
+bool Consumer::wasCloseRequested()
+{
+    return closeRequested;
+}
+
+void Consumer::requestStop()
+{
     if (closeRequested) {
         return;
     }
 
     closeRequested = true;
+    stopRunning = true;
 
     if (message_receiver != NULL) {
         messagereceiver_destroy(message_receiver);
@@ -127,15 +154,4 @@ void Consumer::close()
         link_destroy(link);
         link = NULL;
     }
-
-    stopRunning = true;
-
-    if (!exceptionMessage.empty()) {
-        throw Php::Exception(exceptionMessage);
-    }
-}
-
-bool Consumer::wasCloseRequested()
-{
-    return closeRequested;
 }
