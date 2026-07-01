@@ -22,8 +22,6 @@ RUN apt-get update \
 
 WORKDIR /workspace
 COPY . /workspace
-RUN chmod +x /workspace/setup.sh \
-    && /bin/bash /workspace/setup.sh
+RUN /bin/bash /workspace/setup.sh
 
-CMD ["/bin/bash", "/workspace/scripts/run-e2e.sh"]
-
+CMD ["/bin/bash", "-lc", "sleep infinity"]

@@ -1,0 +1,50 @@
+Library                                      System path                                      Debian package(s)
+-------                                      ----------                                       ----------------
+libphpcpp.so.2.4                             /lib/libphpcpp.so.2.4                            (custom build / bundled by package)
+libbrotlicommon.so.1                         /lib/x86_64-linux-gnu/libbrotlicommon.so.1       (custom build / bundled by package)-ex
+libbrotlidec.so.1                            /lib/x86_64-linux-gnu/libbrotlidec.so.1          (custom build / bundled by package)
+libc.so.6                                    /lib/x86_64-linux-gnu/libc.so.6                  libc6
+libcom_err.so.2                              /lib/x86_64-linux-gnu/libcom_err.so.2            libcom-err2
+libcrypto.so.3                               /lib/x86_64-linux-gnu/libcrypto.so.3             (custom build / bundled by package)
+libcurl.so.4                                 /lib/x86_64-linux-gnu/libcurl.so.4               (custom build / bundled by package)
+libffi.so.8                                  /lib/x86_64-linux-gnu/libffi.so.8                (custom build / bundled by package)
+libgcc_s.so.1                                /lib/x86_64-linux-gnu/libgcc_s.so.1              libgcc-s1
+libgmp.so.10                                 /lib/x86_64-linux-gnu/libgmp.so.10               (custom build / bundled by package)
+libgnutls.so.30                              /lib/x86_64-linux-gnu/libgnutls.so.30            (custom build / bundled by package)
+libgssapi_krb5.so.2                          /lib/x86_64-linux-gnu/libgssapi_krb5.so.2        (custom build / bundled by package)
+libhogweed.so.6                              /lib/x86_64-linux-gnu/libhogweed.so.6            (custom build / bundled by package)
+libidn2.so.0                                 /lib/x86_64-linux-gnu/libidn2.so.0               (custom build / bundled by package)
+libk5crypto.so.3                             /lib/x86_64-linux-gnu/libk5crypto.so.3           (custom build / bundled by package)
+libkeyutils.so.1                             /lib/x86_64-linux-gnu/libkeyutils.so.1           libkeyutils1
+libkrb5.so.3                                 /lib/x86_64-linux-gnu/libkrb5.so.3               (custom build / bundled by package)
+libkrb5support.so.0                          /lib/x86_64-linux-gnu/libkrb5support.so.0        (custom build / bundled by package)
+liblber-2.5.so.0                             /lib/x86_64-linux-gnu/liblber-2.5.so.0           (custom build / bundled by package)
+libldap-2.5.so.0                             /lib/x86_64-linux-gnu/libldap-2.5.so.0           (custom build / bundled by package)
+libm.so.6                                    /lib/x86_64-linux-gnu/libm.so.6                  libc6
+libnettle.so.8                               /lib/x86_64-linux-gnu/libnettle.so.8             (custom build / bundled by package)
+libnghttp2.so.14                             /lib/x86_64-linux-gnu/libnghttp2.so.14           (custom build / bundled by package)
+libp11-kit.so.0                              /lib/x86_64-linux-gnu/libp11-kit.so.0            (custom build / bundled by package)
+libpsl.so.5                                  /lib/x86_64-linux-gnu/libpsl.so.5                (custom build / bundled by package)
+libresolv.so.2                               /lib/x86_64-linux-gnu/libresolv.so.2             libc6
+librtmp.so.1                                 /lib/x86_64-linux-gnu/librtmp.so.1               (custom build / bundled by package)
+libsasl2.so.2                                /lib/x86_64-linux-gnu/libsasl2.so.2              (custom build / bundled by package)
+libssh.so.4                                  /lib/x86_64-linux-gnu/libssh.so.4                (custom build / bundled by package)
+libssl.so.3                                  /lib/x86_64-linux-gnu/libssl.so.3                (custom build / bundled by package)
+libstdc++.so.6                               /lib/x86_64-linux-gnu/libstdc++.so.6             (custom build / bundled by package)
+libtasn1.so.6                                /lib/x86_64-linux-gnu/libtasn1.so.6              (custom build / bundled by package)
+libunistring.so.2                            /lib/x86_64-linux-gnu/libunistring.so.2          (custom build / bundled by package)
+libuuid.so.1                                 /lib/x86_64-linux-gnu/libuuid.so.1               (custom build / bundled by package)
+libz.so.1                                    /lib/x86_64-linux-gnu/libz.so.1                  zlib1g
+libzstd.so.1                                 /lib/x86_64-linux-gnu/libzstd.so.1               (custom build / bundled by package)
+ld-linux-x86-64.so.2                         /lib64/ld-linux-x86-64.so.2                      libc6
+libaziotsharedutil.so                        /usr/local/lib/libaziotsharedutil.so             (custom build / bundled by package)
+libc_logging_v2.so                           /usr/local/lib/libc_logging_v2.so                (custom build / bundled by package)
+libuamqp.so                                  /usr/local/lib/libuamqp.so                       (custom build / bundled by package)
+
+Required Debian packages:
+  - libc6
+  - libcom-err2
+  - libgcc-s1
+  - libkeyutils1
+  - php8.3-common
+  - zlib1g

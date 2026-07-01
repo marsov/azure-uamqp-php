@@ -27,8 +27,11 @@ public:
     void consume();
     void close();
     bool wasCloseRequested();
-    void handleMessage(MESSAGE_HANDLE message);
+    bool handleMessage(MESSAGE_HANDLE message);
     void handleLinkDetach(ERROR_HANDLE error);
+
+private:
+    void requestStop();
 };
 
 #endif
